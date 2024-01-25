@@ -1,3 +1,7 @@
+/**
+ * @file WiFiManager.cpp
+ * @brief Implementation file for the WiFiManager class.
+ */
 // WifiManager.cpp
 #include <Arduino.h>
 #include <my_config.h>
@@ -5,9 +9,18 @@
 #include <WiFiUdp.h> // Add the missing include statement
 #include "WiFiManager.h"
 
+/**
+ * @brief Constructs a new WiFiManager object with the specified SSID and password.
+ * 
+ * @param ssid The SSID (network name) to connect to.
+ * @param password The password for the network.
+ */
 WiFiManager::WiFiManager(const char *ssid, const char *password)
     : ssid(ssid), password(password), wifiUDP(), timeClient(wifiUDP) {}
 
+/**
+ * @brief Connects to the WiFi network.
+ */
 void WiFiManager::connect()
 {
   WiFi.begin(ssid, password);
@@ -28,6 +41,14 @@ void WiFiManager::connect()
   syncTime();
 }
 
+/**
+ * @brief Synchronizes the time of the WiFiManager.
+ * 
+ * This function is responsible for synchronizing the time of the WiFiManager.
+ * It ensures that the time on the WiFiManager is accurate by retrieving the current time from a time server.
+ * 
+ * @note This function requires an active internet connection to retrieve the current time.
+ */
 void WiFiManager::syncTime()
 {
   unsigned long startTime = millis(); // Get the current time
@@ -48,11 +69,19 @@ void WiFiManager::syncTime()
   } //end while
 }
 
+/**
+ * @brief Get the current time in milliseconds.
+ * 
+ * @return The current time in milliseconds.
+ */
 unsigned long WiFiManager::getCurrentTime()
 {
   return timeClient.getEpochTime();// this is ntpUnixTime
 }
 
+/**
+ * Prints the current WiFi status.
+ */
 void WiFiManager::printWiFiStatus()
 {
   Serial.print("(WiFiManager) WiFi status: ");

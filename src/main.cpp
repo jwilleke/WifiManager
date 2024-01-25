@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "WiFiManager.h"
 #include <arduino_secrets.h>
-#include <RTC.h>
+#include <RTC.h>              // RTC.h https://docs.arduino.cc/tutorials/uno-r4-wifi/rtc/
 #include <TimeLib.h>
 #include <Timezone.h>
 #include <my_config.h>
@@ -13,6 +13,7 @@ extern WiFiManager wifiManager;
 unsigned long lastOneMinutesExecutionTime = 0;
 unsigned long lastTenMinutesExecutionTime = 0;
 unsigned long lastHourlyExecutionTime = 0;
+unsigned long uptimeMinutes = 0;
 const unsigned long hourInterval = 3600000; // 1 hour in milliseconds
 
 // used for NTP and time in general
@@ -26,12 +27,25 @@ TimeChangeRule *tcr; // pointer to the time change rule, use to get TZ abbrev
 char ssid[] = SECRET_SSID;
 char pass[] = SECRET_PASS;
 
+/**
+ * @class WiFiManager
+ * @brief A class for managing WiFi connections.
+ *
+ * This class provides methods for connecting to WiFi networks and managing the connection settings.
+ * It simplifies the process of connecting to a WiFi network by handling the configuration and connection process.
+ * The class also provides methods for resetting the WiFi settings and managing the access point mode.
+ */
 WiFiManager wifiManager(ssid, pass);
 
-// RTC.h https://docs.arduino.cc/tutorials/uno-r4-wifi/rtc/
 
 /**
- * Convert a RTCTime object to a time_t object
+ * @brief Converts an RTCTime object to TimeElements.
+ * 
+ * This function takes an RTCTime object and converts it to TimeElements, which represents the individual
+ * components of time such as year, month, day, hour, minute, and second.
+ * 
+ * @param inTime The RTCTime object to be converted.
+ * @return TimeElements The converted TimeElements object.
  */
 time_t RTCTimeToTimeElements(RTCTime inTime)
 {
@@ -51,10 +65,10 @@ time_t RTCTimeToTimeElements(RTCTime inTime)
   return myTimeElements;
 }
 
-// RTC.h https://docs.arduino.cc/tutorials/uno-r4-wifi/rtc/
-RTCTime currentRTCTime;
 /**
- * Print the given time to the serial monitor in a user-friendly format
+ * @brief Prints the given time.
+ * 
+ * @param t The time to be printed.
  */
 void printTime(time_t t)
 {
@@ -86,6 +100,16 @@ void printTime(time_t t)
   Serial.print(second(t));
 }
 
+/**
+ * @brief Sets the Real-Time Clock (RTC).
+ * 
+ * This function is responsible for setting the Real-Time Clock (RTC) in the Arduino sketch.
+ * It performs the necessary operations to configure the RTC according to the desired settings.
+ * 
+ * @note This function assumes that the necessary libraries and hardware components are properly set up.
+ * 
+ * @return void
+ */
 void setRTC()
 {
   if (RTC.isRunning())
@@ -120,6 +144,10 @@ void setRTC()
   }
 }
 
+/**
+ * @brief Function called once when the program starts.
+ *        It is used to initialize variables, pin modes, libraries, etc.
+ */
 void setup()
 {
   Serial.begin(115200);
@@ -138,6 +166,7 @@ void setup()
   RTCTime mytime(24, Month::JANUARY, 2024, 15, 00, 00, DayOfWeek::WEDNESDAY, SaveLight::SAVING_TIME_ACTIVE);
   RTC.setTime(mytime);
   // Get current time from RTC
+  RTCTime currentRTCTime;
   RTC.getTime(currentRTCTime);
 
   // Unix timestamp
@@ -148,6 +177,12 @@ void setup()
   // Your setup code
 }
 
+/**
+ * @brief Perform hourly functions.
+ * 
+ * This function is responsible for executing tasks that need to be performed on an hourly basis.
+ * Add your code inside this function to perform the desired hourly tasks.
+ */
 void hourlyFunctions()
 {
   Serial.println("1 Hour has passed");
@@ -155,10 +190,13 @@ void hourlyFunctions()
 }
 
 // Check if an hour has passed since the last execution
+/**
+ * @brief Performs the functions that need to be executed every minute.
+ */
 void oneMinutesFunctions()
 {
   // Your code for the hourly function
-  Serial.println("1 minute has passed");
+  printf("%ld minutes has passed", uptimeMinutes);
   if (RTC.isRunning())
   {
     Serial.println("(oneMinutesFunctions) RTC is running");
@@ -196,20 +234,13 @@ void oneMinutesFunctions()
   printTime(t_time);
   Serial.println();
 
-  // Convert UTC time to local time in Knox County, Ohio
-  // time_t local = myTZ.toLocal(utc);
-
-  // Print both UTC and local time in a user-friendly format
-  // Serial.print("UTC: ");
-  // printTime(utc);
-
-  // Serial.print("Local Time (Knox County, OH): ");
-  // printTime(local);
-
   Serial.println("EXIT oneMinutesFunctions()");
 }
 
 // Check if an hour has passed since the last execution
+/**
+ * @brief Performs the functions that need to be executed every ten minutes.
+ */
 void tenMinutesFunctions()
 {
   // Your code for the hourly function
@@ -224,6 +255,13 @@ void tenMinutesFunctions()
   Serial.println();
 }
 
+/**
+ * @brief The main loop function.
+ * 
+ * This function is called repeatedly in the Arduino sketch. It is responsible for executing the main logic of the program.
+ * 
+ * @return void
+ */
 void loop()
 {
   // Your main loop code
@@ -244,8 +282,9 @@ void loop()
     lastTenMinutesExecutionTime = currentTime;
   }
   if (currentTime - lastOneMinutesExecutionTime >= hourInterval / 60) // 1 minute
-  {                                                                   // 10 minutes
+  {                                                                   
     // Execute the function
+    uptimeMinutes++;
     oneMinutesFunctions();
     // Update the last execution time
     lastOneMinutesExecutionTime = currentTime;
