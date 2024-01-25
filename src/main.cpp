@@ -20,8 +20,8 @@ TimeChangeRule myDST = {"EDT", Second, Sun, Mar, 2, -240}; // Eastern Daylight T
 TimeChangeRule mySTD = {"EST", First, Sun, Nov, 2, -300};  // Eastern Standard Time
 Timezone myTZ(myDST, mySTD);
 TimeChangeRule *tcr; // pointer to the time change rule, use to get TZ abbrev
-unsigned long ntpTime = 0;
-unsigned long currentTime = 0;
+
+// used for wi-fi
 char ssid[] = SECRET_SSID;
 char pass[] = SECRET_PASS;
 
@@ -112,7 +112,7 @@ void setup()
   wifiManager.connect();
   wifiManager.printWiFiStatus();
 
-  ntpTime = wifiManager.getCurrentTime();
+  unsigned long ntpTime = wifiManager.getCurrentTime();
   Serial.print("(Setup)Current NTP TimeStamp: ");
   Serial.println(ntpTime);
 
@@ -152,16 +152,18 @@ void oneMinutesFunctions()
   Serial.print("(oneMinutesFunctions) Current UNIX-RTC Time:(UTC) ");
   Serial.println(rtcNowTime.getUnixTime());
   // get NTP Time
-  ntpTime = wifiManager.getCurrentTime();
+  unsigned long ntpTime = wifiManager.getCurrentTime();
   Serial.print("(oneMinutesFunctions) Current UNIX-NTP Time:(UTC) ");
   Serial.println(ntpTime);
-  if (ntpTime > rtcNowTime.getUnixTime())
+  if (((long int)ntpTime - (long int)rtcNowTime.getUnixTime()) > 0)
   {
-    printf("(oneMinutesFunctions) NTP is ahead of RTC by: %ld seconds\n", (ntpTime - rtcNowTime.getUnixTime()));
+    printf("(oneMinutesFunctions) NTP is ahead of RTC by: %ld seconds\n", ((long int)ntpTime - (long int)rtcNowTime.getUnixTime()));
   }
-  else
+  else if (((long int)rtcNowTime.getUnixTime() - (long int)ntpTime) > 0)
   {
-    printf("(oneMinutesFunctions) RTC is ahead of NTP by: %ld seconds\n", (rtcNowTime.getUnixTime() - ntpTime));
+    printf("(oneMinutesFunctions) RTC is ahead of NTP by: %ld seconds\n", ((long int)rtcNowTime.getUnixTime() - (long int)ntpTime));
+  } else {
+    printf("(oneMinutesFunctions) RTC and NTP are in sync\n");
   }
 
   Serial.print("(oneMinutesFunctions) Current RTC Time: ");
