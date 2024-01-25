@@ -73,17 +73,29 @@ void setRTC()
   if (RTC.isRunning())
   {
     Serial.println("(setRTC) RTC is running");
-    // Set the RTC using time from the NTP server
-    unsigned long rtcTime = 0;
-    rtcTime = wifiManager.getCurrentTime(); // ntpUnixTime
-    RTCTime timeToSet(rtcTime);             // Convert the time to a RTCTime object
+
+
+    // Get NTP Time using time from the NTP server
+    unsigned long ntpUnixTime = 0;
+    ntpUnixTime = wifiManager.getCurrentTime(); // ntpUnixTime
+    Serial.print("(setRTC) Current NTP Time: ");
+    
+    
+    Serial.print("(setRTC) Current RTC Time: ");
+    RTCTime rtcNowTime;
+    RTC.getTime(rtcNowTime); // Get the current time from the RTC UnixTime
+    time_t t_time = RTCTimeToTimeElements(rtcNowTime);
+    printTime(t_time);
+    Serial.println();
+    RTCTime timeToSet(ntpUnixTime);             // Convert the time to a RTCTime object
     RTC.setTime(timeToSet);                 // Set the RTC to the time received from the NTP server
     // Retrieve the date and time from the RTC and print them
     RTCTime nowTime;      // Create a RTCTime object to store the current time in UnixTime
     RTC.getTime(nowTime); // Get the current time from the RTC UnixTime
-
-    Serial.print("(setRTC) The RTC was just set to: (rtcUnixTime) ");
-    Serial.println(nowTime); // Print the new time
+    t_time = RTCTimeToTimeElements(rtcNowTime);
+    Serial.print("(setRTC) The RTC was just set to: ");
+    Serial.println(t_time); // Print the new time
+    Serial.println();
   }
   else
   {
@@ -138,7 +150,7 @@ void oneMinutesFunctions()
   RTCTime rtcNowTime;
   RTC.getTime(rtcNowTime);
   Serial.print("(oneMinutesFunctions) Current UNIX-RTC Time:(UTC) ");
-  Serial.println(rtcNowTime);
+  Serial.println(rtcNowTime.getUnixTime());
 
   ntpTime = wifiManager.getCurrentTime();
   Serial.print("(oneMinutesFunctions) Current UNIX-NTP Time:(UTC) ");
@@ -177,19 +189,9 @@ void tenMinutesFunctions()
   RTCTime currentTime;
   RTC.getTime(currentTime);
   Serial.println("The RTC was just set to: " + String(currentTime));
-
-  // Convert UTC time to local time in Knox County, Ohio
-  // time_t local = myTZ.toLocal(utc);
-
-  // Print both UTC and local time in a user-friendly format
-  // Serial.print("UTC: ");
-  // printTime(utc);
-
-  // Serial.print("Local Time (Knox County, OH): ");
-  // printTime(local);
-
   Serial.println();
 }
+
 void loop()
 {
   // Your main loop code
