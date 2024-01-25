@@ -59,14 +59,29 @@ void printTime(time_t t)
 {
   Serial.print(year(t));
   Serial.print("-");
+  if (month(t) < 10) {
+    Serial.print("0");
+  }
   Serial.print(month(t));
   Serial.print("-");
+  if (day(t) < 10) {
+    Serial.print("0");
+  }
   Serial.print(day(t));
   Serial.print("T");
+  if (hour(t) < 10) {
+    Serial.print("0");
+  }
   Serial.print(hour(t));
   Serial.print(":");
+  if (minute(t) < 10) {
+    Serial.print("0");
+  }
   Serial.print(minute(t));
   Serial.print(":");
+  if (second(t) < 10) {
+    Serial.print("0");
+  }
   Serial.print(second(t));
 }
 
