@@ -10,6 +10,7 @@
 extern WiFiManager wifiManager;
 
 // used for  millis();
+unsigned long lastOneMinutesExecutionTime = 0;
 unsigned long lastTenMinutesExecutionTime = 0;
 unsigned long lastHourlyExecutionTime = 0;
 const unsigned long hourInterval = 3600000; // 1 hour in milliseconds
@@ -170,6 +171,7 @@ void oneMinutesFunctions()
   unsigned long ntpTime = wifiManager.getCurrentTime();
   Serial.print("(oneMinutesFunctions) Current UNIX-NTP Time:(UTC) ");
   Serial.println(ntpTime);
+  long int diff = abs((long int)ntpTime - (long int)rtcNowTime.getUnixTime());
   if (((long int)ntpTime - (long int)rtcNowTime.getUnixTime()) > 0)
   {
     printf("(oneMinutesFunctions) NTP is ahead of RTC by: %ld seconds\n", ((long int)ntpTime - (long int)rtcNowTime.getUnixTime()));
@@ -179,6 +181,10 @@ void oneMinutesFunctions()
     printf("(oneMinutesFunctions) RTC is ahead of NTP by: %ld seconds\n", ((long int)rtcNowTime.getUnixTime() - (long int)ntpTime));
   } else {
     printf("(oneMinutesFunctions) RTC and NTP are in sync\n");
+  }
+  if (diff > 5) {
+    printf("(oneMinutesFunctions) RTC and NTP are in sync - Sync RTC to NTP\n");
+    setRTC();
   }
 
   Serial.print("(oneMinutesFunctions) Current RTC Time: ");
@@ -237,12 +243,12 @@ void loop()
     // Update the last execution time
     lastTenMinutesExecutionTime = currentTime;
   }
-  if (currentTime - lastTenMinutesExecutionTime >= hourInterval / 60) // 1 minute
+  if (currentTime - lastOneMinutesExecutionTime >= hourInterval / 60) // 1 minute
   {                                                                   // 10 minutes
     // Execute the function
     oneMinutesFunctions();
     // Update the last execution time
-    lastTenMinutesExecutionTime = currentTime;
+    lastOneMinutesExecutionTime = currentTime;
   }
   // Your remaining loop code
 }
